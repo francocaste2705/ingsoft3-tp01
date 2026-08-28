@@ -74,3 +74,28 @@ td {
   padding: 0.5rem;
   border-bottom: 1px solid #334155;
 }
+
+
+.excedido {
+  color: #f87171;
+  font-weight: bold;
+}
+
+.presupuestos {
+  margin-bottom: 1.5rem;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+}
+
+.presupuestos summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+td button {
+  margin-right: 0.3rem;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.6rem;
+}
+
