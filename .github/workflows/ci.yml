@@ -5,3 +5,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Workflow base: se completa en el TP4 con los pasos de build y test
