@@ -113,3 +113,65 @@ deslogueado para confirmar que las imágenes eran realmente públicas). Entiendo
 cada Dockerfile y del compose lo suficiente como para explicarla en la defensa oral: qué hace
 cada instrucción, por qué el orden importa para el cache, por qué el volumen es necesario, y por
 qué el frontend habla con el backend por ruta relativa y no por URL absoluta.
+
+## TP3 — Planificación y trazabilidad
+
+### 1. Duración del sprint
+
+Elegí sprints de **1 semana**, porque coincide con el ritmo de entrega de la cátedra (un TP
+por semana) y permite cerrar un ciclo completo de planificación → ejecución → revisión en cada
+entrega, alineando el objetivo del sprint con el objetivo de cada práctico. Un sprint más largo
+(por ejemplo, un mes) no me daría feedback a tiempo respecto del calendario real de la materia.
+
+### 2. Límite de trabajo en progreso
+
+Configuré el límite de la columna *In Progress* en **2**, siguiendo la regla de arranque de la
+guía: cantidad de personas trabajando (1, en mi caso, porque el TP es individual) más uno. El
+"+1" es la válvula para cuando algo queda esperando (por ejemplo, una revisión propia o un
+bloqueo externo) y necesito poder avanzar en otra cosa sin romper el límite. Si en la práctica
+nunca llego a usar las 2 posiciones, es señal de que podría bajarlo a 1; si lo alcanzo todo el
+tiempo y me frena, sería señal de subirlo.
+
+### 3. Diagnóstico de la historia mal escrita
+
+La historia de ejemplo *"Como desarrollador quiero crear la tabla usuarios"* está mal escrita
+porque es una **tarea técnica disfrazada de historia**: no describe una capacidad observable
+por un usuario, sino un paso de implementación interno. Le falta además el "para qué" (el
+beneficio) — "crear una tabla" no es algo que nadie "quiera" en sí mismo, es un medio para
+lograr otra cosa. Se puede reconocer por el anti-patrón que menciona la guía: si el "quiero"
+describe una pieza técnica en vez de una capacidad de negocio, es una tarea.
+
+Cómo la reescribiría: la elevaría a una historia real, por ejemplo *"Como usuario quiero
+registrarme e iniciar sesión para poder acceder a mis datos personales"*, y "crear la tabla
+usuarios" pasaría a ser una de las **tareas técnicas** dentro de esa historia (junto con, por
+ejemplo, "implementar el endpoint de registro" o "validar el formato del email").
+
+### 4. Problemas encontrados y cómo los resolví
+
+- **Los comandos `gh` con `\` para continuar en varias líneas fallaban en PowerShell**
+  (`ParserError: Missing expression after unary operator '--'`). PowerShell no interpreta la
+  barra invertida como continuación de línea (eso es sintaxis de bash/zsh). Lo resolví escribiendo
+  cada comando `gh issue create` en una sola línea, con comillas dobles en vez de simples.
+- **El primer `gh project item-add` falló** porque copié el número de proyecto entre signos
+  `< >` literales (`<2>`), que PowerShell interpretó como redirección de archivo. Lo resolví
+  usando el número solo, sin los signos.
+- **El PR que debía cerrar la tarea "Escribir el workflow de build y tests" (#9) se mergeó con
+  `Closes #12`** — un número de issue que no existe en mi repositorio (probablemente copiado de
+  un ejemplo sin ajustar). Como el merge ya había ocurrido, el auto-cierre no se disparó
+  retroactivamente. Lo resolví abriendo un segundo PR chico (un comentario adicional en el
+  `ci.yml`) con la descripción corregida a `Closes #9`, que sí cerró la tarea correcta al
+  mergearse.
+
+### 5. Declaración de uso de IA
+
+Usé IA (Claude) para traducir la guía del TP a una secuencia concreta de comandos `gh` y pasos
+de la interfaz web adaptados a mi repositorio, y para diagnosticar los tres problemas del punto
+anterior a medida que aparecían (en particular, para identificar por qué `Closes #12` no había
+cerrado ningún issue). Verifiqué cada paso ejecutándolo yo mismo y revisando el resultado real
+en GitHub: el estado de cada issue con `gh issue list`, la jerarquía de sub-issues abriendo cada
+uno en la web, el tablero y el límite de trabajo en progreso, y finalmente que la tarea #9
+apareciera cerrada y enlazada al PR correcto después de corregir el error. Entiendo la
+diferencia entre historia, tarea y épica, por qué la trazabilidad depende de que `Closes #N`
+esté en la descripción del PR y no en un comentario posterior, y por qué elegí la duración de
+sprint y el límite de trabajo en progreso que elegí — puedo explicar cada uno de estos puntos
+en la defensa oral sin depender del texto generado.
