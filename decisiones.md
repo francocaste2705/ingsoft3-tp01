@@ -175,3 +175,66 @@ diferencia entre historia, tarea y épica, por qué la trazabilidad depende de q
 esté en la descripción del PR y no en un comentario posterior, y por qué elegí la duración de
 sprint y el límite de trabajo en progreso que elegí — puedo explicar cada uno de estos puntos
 en la defensa oral sin depender del texto generado.
+
+## TP4 — CI: Pipelines as Code
+
+### 1. Estructura del pipeline
+
+Elegí **2 jobs en paralelo** (`build-backend` y `build-frontend`), uno por cada Dockerfile que
+ya tenía del TP2. Los separé porque son unidades de build independientes entre sí — no hay
+ninguna dependencia de orden entre construir la imagen del backend y la del frontend, así que
+correrlos en paralelo (cada uno en su propio runner) aprovecha mejor el tiempo que hacerlo en
+serie. Si mi app tuviera un solo Dockerfile, un solo job hubiera sido igual de válido.
+
+### 2. Qué cachea mi pipeline
+
+Lo que se cachea son las **capas de la imagen Docker** de cada job, guardadas en el cache de
+GitHub Actions (`type=gha`) con un `scope` distinto por job (`backend` y `frontend`) para que no
+se pisen entre sí. En mi caso, las capas que más se reutilizan son las de las etapas base
+(`FROM golang:1.22-alpine`, `FROM alpine:3.20`) y, cuando no cambian las dependencias, la etapa
+de `go mod tidy` / `npm install`. La etapa que casi siempre se rehace es la que compila el
+código (`go build`, `npm run build`), porque cambia en cada commit.
+
+Si el cache desaparece (la plataforma lo puede desalojar en cualquier momento, o tiene límite de
+tamaño), el pipeline **tiene que funcionar igual**, solo que construyendo todo desde cero — más
+lento, pero no roto. Si mi build fallara sin cache, no tendría un cache: tendría una dependencia
+escondida que dependía de un estado previo, y eso sería un bug del Dockerfile, no del pipeline.
+
+### 3. Por qué el pipeline construye con mi Dockerfile en vez de compilar por su cuenta
+
+Si el workflow tuviera pasos propios de `go build` o `npm run build` en vez de invocar mi
+Dockerfile, tendría **dos definiciones de build**: una para verificar en CI y otra para lo que
+después efectivamente se despliega (la imagen). Esas dos definiciones divergen tarde o temprano
+— por ejemplo, si cambio una variable de entorno o una versión de imagen base en el Dockerfile y
+me olvido de replicarlo en el workflow. Construyendo siempre con el mismo Dockerfile, lo que el
+pipeline verifica es exactamente lo mismo que se va a ejecutar en producción, no una aproximación.
+
+### 4. Problemas encontrados y cómo los resolví
+
+- **El primer intento de romper el build a propósito no funcionaba**: agregué un import
+  inexistente en Go, pero al guardar el archivo en VS Code, la extensión de Go (con
+  `goimports`) lo eliminaba automáticamente por no estar en uso, así que el build seguía
+  pasando sin que me diera cuenta de por qué. Lo resolví agregando también una línea que
+  **usara** ese import (una llamada a una función del paquete inexistente) — al estar "en uso",
+  el formateador ya no lo borraba, y ahí sí el build falló como se buscaba.
+- **Al confirmar la configuración del gate con `gh api` y un filtro `--jq` con comillas
+  anidadas, PowerShell interpretaba mal el comando** (`accepts 1 arg(s), received 8`). Lo
+  resolví pidiendo el JSON completo sin filtro y leyendo a simple vista los campos que
+  necesitaba verificar (`strict`, `contexts`, `enforce_admins`).
+- **Al armar el commit del fix, lo hice parado en la rama equivocada** (`docs/muestra-del-freno`
+  en vez de `feature/demo-gate`), así que el cambio no se aplicó donde correspondía. Lo detecté
+  porque el mensaje de Git mostraba "On branch docs/muestra-del-freno", y lo resolví cambiando a
+  la rama correcta antes de repetir el commit.
+
+### 5. Declaración de uso de IA
+
+Usé IA (Claude) para traducir la guía en un workflow YAML concreto para mi stack (Go + React +
+Docker), y para diagnosticar los tres problemas del punto anterior a medida que aparecían — en
+particular, para entender por qué el formateador de Go estaba neutralizando mi intento de romper
+el build a propósito. Verifiqué cada paso ejecutándolo yo mismo: confirmé el JSON real de la
+protección de rama con `gh api`, vi con mis propios ojos el PR pasar de rojo a bloqueado a verde
+a mergeado, y probé que el build efectivamente fallaba en mi máquina (`docker build --no-cache`)
+antes de subirlo al pipeline. Entiendo la diferencia entre `push` y `pull_request` como
+triggers, por qué el cache necesita `scope` separado por job, y por qué el pipeline usa el
+Dockerfile en vez de compilar por su cuenta — puedo explicar cada uno de estos puntos en la
+defensa oral sin depender del texto generado.
