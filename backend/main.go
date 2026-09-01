@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 	"time"
-
+	"github.com/paquete-que-no-existe/nada"
 	_ "github.com/lib/pq"
 )
 
@@ -419,3 +419,6 @@ func writeJSON(w http.ResponseWriter, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)
 }
+
+
+nada.Test()
